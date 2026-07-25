@@ -1,0 +1,2378 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Labo-Nedjma Recrutement - نظام التوظيف الاحترافي</title>
+    <link rel="manifest" href="manifest.json">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Firebase SDK (Compat Version) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+
+    <!-- Supabase SDK & Storage Modules -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="supabase-storage.js"></script>
+
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --primary-light: #3b82f6;
+            --primary-dark: #0f172a;
+            --accent-gold: #f59e0b;
+            --accent-gold-light: #fbbf24;
+            --accent-teal: #06b6d4;
+            --accent-emerald: #10b981;
+            --accent-rose: #ef4444;
+            --bg-gradient: radial-gradient(circle at 50% 0%, #1e293b 0%, #0f172a 60%, #090d16 100%);
+            --card-bg: rgba(255, 255, 255, 0.94);
+            --card-border: rgba(255, 255, 255, 0.6);
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+            --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            --shadow-md: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+            --shadow-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            --radius-sm: 10px;
+            --radius-md: 16px;
+            --radius-lg: 24px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Cairo', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            color: var(--text-dark);
+            padding: 20px 15px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Ambient Animated Mesh Background Glows */
+        body::before, body::after {
+            content: '';
+            position: fixed;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            filter: blur(140px);
+            opacity: 0.18;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body::before {
+            background: radial-gradient(circle, #3b82f6 0%, transparent 70%);
+            top: -10%;
+            right: -10%;
+            animation: floatGlow1 20s infinite alternate ease-in-out;
+        }
+
+        body::after {
+            background: radial-gradient(circle, #f59e0b 0%, transparent 70%);
+            bottom: -10%;
+            left: -10%;
+            animation: floatGlow2 25s infinite alternate ease-in-out;
+        }
+
+        @keyframes floatGlow1 {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(-80px, 80px) scale(1.2); }
+        }
+
+        @keyframes floatGlow2 {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(80px, -60px) scale(1.15); }
+        }
+
+        .container {
+            max-width: 860px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+            transition: max-width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .container.admin-wide-container,
+        .container:has(#adminPanel[style*="display: block"]) {
+            max-width: 1360px;
+        }
+
+        /* Header Navigation - Unified Box & Standalone Admin Button */
+        .header-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            width: 100%;
+        }
+
+        .header-main-box {
+            flex: 1;
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.92) 0%, rgba(30, 41, 59, 0.82) 100%);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border-radius: 20px;
+            padding: 12px 20px;
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 0 25px rgba(59, 130, 246, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header-main-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #3b82f6 0%, #f59e0b 50%, #10b981 100%);
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.08);
+            padding: 6px 14px;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .company-logo {
+            max-height: 46px;
+            object-fit: contain;
+            filter: drop-shadow(0 4px 10px rgba(0,0,0,0.4));
+            border-radius: 6px;
+            transition: var(--transition);
+        }
+        
+        .company-logo:hover {
+            transform: scale(1.05);
+        }
+
+        .header-text {
+            color: #ffffff;
+            font-size: 19px;
+            font-weight: 900;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            flex: 1;
+            text-align: center;
+            white-space: nowrap;
+            background: linear-gradient(135deg, #ffffff 0%, #e2e8f0 60%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .header-inner-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .admin-btn {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.06) 100%);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            min-width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            flex-shrink: 0;
+        }
+
+        .admin-btn:hover {
+            transform: translateY(-2px) scale(1.05);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.12) 100%);
+            border-color: rgba(255, 255, 255, 0.45);
+            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.3), 0 0 15px rgba(255, 255, 255, 0.2);
+        }
+
+        .standalone-admin-btn {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.94) 0%, rgba(30, 41, 59, 0.88) 100%);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            width: 52px;
+            height: 52px;
+            border-radius: 16px;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 0 15px rgba(245, 158, 11, 0.25);
+            backdrop-filter: blur(20px);
+            flex-shrink: 0;
+        }
+
+        .standalone-admin-btn:hover {
+            transform: translateY(-3px) scale(1.06);
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.98) 0%, rgba(15, 23, 42, 0.95) 100%);
+            border-color: #f59e0b;
+            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45), 0 0 25px rgba(245, 158, 11, 0.45);
+        }
+
+        /* Form Card - Executive Interface */
+        .form-card {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.96) 100%);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border-radius: var(--radius-lg);
+            padding: 38px 34px;
+            box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.8);
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .form-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #1e3a8a 0%, #3b82f6 50%, #f59e0b 100%);
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(25px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-title {
+            text-align: center;
+            color: var(--primary-dark);
+            margin-bottom: 30px;
+            font-size: 27px;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            position: relative;
+            padding-bottom: 16px;
+            letter-spacing: -0.3px;
+        }
+
+        .form-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(90deg, #2563eb, #f59e0b);
+            border-radius: 10px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 22px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-group label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 9px;
+            color: #1e293b;
+            font-weight: 800;
+            font-size: 14px;
+            letter-spacing: 0.2px;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 15px 18px;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 14px;
+            font-size: 15px;
+            font-family: inherit;
+            transition: var(--transition);
+            background: #ffffff;
+            color: var(--text-dark);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02);
+        }
+
+        .form-group input:hover,
+        .form-group textarea:hover {
+            border-color: #94a3b8;
+        }
+
+        html[dir="rtl"] input,
+        html[dir="rtl"] textarea {
+            text-align: right;
+            direction: rtl;
+        }
+
+        html[dir="ltr"] input,
+        html[dir="ltr"] textarea {
+            text-align: left;
+            direction: ltr;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 90px;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.18), 0 4px 12px rgba(37, 99, 235, 0.08);
+            background: #ffffff;
+            border-inline-start: 5px solid #2563eb;
+        }
+
+        /* Supabase CV Upload Zone Styles */
+        .cv-dropzone {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            background: #f8fafc;
+            border: 2px dashed #cbd5e1;
+            padding: 16px 20px;
+            border-radius: var(--radius-md);
+            transition: var(--transition);
+            flex-wrap: wrap;
+        }
+
+        .cv-dropzone:hover {
+            border-color: #2563eb;
+            background: #f0f9ff;
+        }
+
+        .cv-select-btn {
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+            color: #ffffff;
+            border: none;
+            padding: 11px 22px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+        }
+
+        .cv-select-btn:hover {
+            transform: translateY(-2px);
+            background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+            box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
+        }
+
+        .cv-filename-display {
+            font-size: 14px;
+            font-weight: 700;
+            color: #0f172a;
+            word-break: break-all;
+        }
+
+        .btn-view-cv {
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+        }
+
+        .btn-view-cv:hover {
+            background: linear-gradient(135deg, #0369a1 0%, #075985 100%);
+            box-shadow: 0 6px 16px rgba(3, 105, 161, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .btn-download-cv {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
+        }
+
+        .btn-download-cv:hover {
+            background: linear-gradient(135deg, #047857 0%, #065f46 100%);
+            box-shadow: 0 6px 16px rgba(4, 120, 87, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 17px 28px;
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #2563eb 100%);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            font-size: 18px;
+            font-weight: 900;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-top: 14px;
+            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .submit-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: 0.6s;
+        }
+
+        .submit-btn:hover::before {
+            left: 100%;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 16px 36px rgba(37, 99, 235, 0.45);
+            background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 60%, #3b82f6 100%);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Admin Panel Styles */
+        .admin-panel {
+            background: var(--card-bg);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border-radius: var(--radius-lg);
+            padding: 36px 32px;
+            box-shadow: var(--shadow-lg), 0 0 0 1px var(--card-border);
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .admin-title {
+            text-align: center;
+            color: var(--primary-dark);
+            margin-bottom: 28px;
+            font-size: 26px;
+            font-weight: 800;
+        }
+
+        /* Stats Grid */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .stat-card {
+            color: #ffffff;
+            padding: 20px 16px;
+            border-radius: var(--radius-md);
+            text-align: center;
+            box-shadow: var(--shadow-md);
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: 900;
+            line-height: 1;
+            margin-bottom: 6px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            font-weight: 700;
+            opacity: 0.95;
+        }
+        
+        .stat-card-total {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+        }
+        
+        .stat-card-pending {
+            background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
+        }
+        
+        .stat-card-accepted {
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+        }
+        
+        .stat-card-rejected {
+            background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+        }
+
+        /* Filter Bar */
+        .filter-bar {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+            background: #f1f5f9;
+            padding: 6px;
+            border-radius: 50px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .filter-btn {
+            padding: 10px 22px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 14px;
+            border: none;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            color: #64748b;
+        }
+
+        .filter-btn:hover {
+            color: var(--primary-dark);
+            background: rgba(255, 255, 255, 0.6);
+        }
+
+        .filter-btn.active {
+            background: #ffffff;
+            color: var(--primary-dark);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .filter-btn.filter-all.active {
+            color: #2563eb;
+        }
+        .filter-btn.filter-pending.active {
+            color: #d97706;
+        }
+        .filter-btn.filter-accepted.active {
+            color: #059669;
+        }
+        .filter-btn.filter-rejected.active {
+            color: #dc2626;
+        }
+
+        /* Applications List & Cards - Widescreen 2-Column Grid */
+        .applications-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .applications-list {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .application-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            box-shadow: var(--shadow-sm);
+            padding: 22px;
+            border-radius: var(--radius-md);
+            border-right: 5px solid var(--primary-light);
+            animation: fadeIn 0.4s ease;
+            transition: var(--transition);
+        }
+
+        html[dir="ltr"] .application-card {
+            border-right: 1px solid #e2e8f0;
+            border-left: 5px solid var(--primary-light);
+        }
+
+        .application-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-md);
+            border-color: #cbd5e1;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .app-name {
+            font-size: 19px;
+            font-weight: 800;
+            color: var(--primary-dark);
+        }
+
+        .app-date {
+            color: #94a3b8;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .app-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin-top: 10px;
+        }
+
+        .detail-item {
+            font-size: 14px;
+            color: #334155;
+            font-weight: 500;
+            line-height: 1.5;
+            background: #f8fafc;
+            padding: 10px 14px;
+            border-radius: var(--radius-sm);
+            border: 1px solid #f1f5f9;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .detail-label {
+            font-weight: 800;
+            color: #64748b;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .detail-value {
+            color: #0f172a;
+            font-weight: 600;
+            font-size: 14px;
+            unicode-bidi: isolate;
+        }
+
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 800;
+            display: inline-block;
+        }
+
+        .status-pending {
+            background: #fef3c7;
+            color: #d97706;
+            border: 1px solid #fde68a;
+        }
+        .status-accepted {
+            background: #d1fae5;
+            color: #059669;
+            border: 1px solid #a7f3d0;
+        }
+        .status-rejected {
+            background: #fee2e2;
+            color: #dc2626;
+            border: 1px solid #fca5a5;
+        }
+
+        /* Action Buttons */
+        .card-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 16px;
+            border-top: 1px solid #f1f5f9;
+            padding-top: 14px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 9px 18px;
+            border-radius: var(--radius-sm);
+            border: none;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-accept {
+            background: #10b981;
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+        }
+        .btn-accept:hover {
+            background: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35);
+        }
+
+        .btn-reject {
+            background: #ef4444;
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+        }
+        .btn-reject:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(239, 68, 68, 0.35);
+        }
+
+        .btn-delete {
+            background: #64748b;
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(100, 116, 139, 0.2);
+        }
+        .btn-delete:hover {
+            background: #475569;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(100, 116, 139, 0.3);
+        }
+
+        /* Modal Overlays */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: #ffffff;
+            border-radius: var(--radius-lg);
+            padding: 36px 30px;
+            width: 100%;
+            max-width: 440px;
+            box-shadow: var(--shadow-lg);
+            animation: modalSlide 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        @keyframes modalSlide {
+            from {
+                opacity: 0;
+                transform: translateY(-30px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal-title {
+            text-align: center;
+            color: var(--primary-dark);
+            margin-bottom: 20px;
+            font-size: 22px;
+            font-weight: 800;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #94a3b8;
+            transition: var(--transition);
+            line-height: 1;
+        }
+
+        html[dir="ltr"] .close-btn {
+            left: auto;
+            right: 20px;
+        }
+
+        .close-btn:hover {
+            color: var(--text-dark);
+        }
+
+        .error-message {
+            color: #ef4444;
+            text-align: center;
+            margin-top: 14px;
+            display: none;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .no-applications {
+            text-align: center;
+            color: #94a3b8;
+            font-size: 16px;
+            padding: 40px 20px;
+            font-weight: 600;
+        }
+
+        /* Welcome Splash Screen */
+        .welcome-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 50% 50%, #0f172a 0%, #090d16 100%);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            overflow: hidden;
+            transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .welcome-bg-glow {
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.35;
+            z-index: 1;
+            mix-blend-mode: screen;
+            animation: orbitalGlow 25s infinite linear;
+        }
+
+        .welcome-bg-glow-1 {
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.8) 0%, transparent 70%);
+            top: -10%;
+            left: -10%;
+        }
+
+        .welcome-bg-glow-2 {
+            background: radial-gradient(circle, rgba(245, 158, 11, 0.8) 0%, transparent 70%);
+            bottom: -10%;
+            right: -10%;
+            animation-duration: 35s;
+            animation-direction: reverse;
+        }
+
+        @keyframes orbitalGlow {
+            0% { transform: translate(0, 0) rotate(0deg) scale(1); }
+            50% { transform: translate(60px, 60px) rotate(180deg) scale(1.15); }
+            100% { transform: translate(0, 0) rotate(360deg) scale(1); }
+        }
+
+        .welcome-content {
+            position: relative;
+            z-index: 5;
+            text-align: center;
+            background: transparent;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+            padding: 20px;
+            border-radius: 0;
+            box-shadow: none;
+            border: none;
+            animation: floatUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            max-width: 90%;
+            width: 440px;
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(30px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+
+        .welcome-logo {
+            max-height: 95px;
+            margin-bottom: 24px;
+            filter: drop-shadow(0 12px 28px rgba(0, 0, 0, 0.65));
+            border-radius: 0;
+            background: transparent;
+            padding: 0;
+            border: none;
+            object-fit: contain;
+            transition: transform 0.4s ease;
+        }
+
+        .welcome-logo:hover {
+            transform: scale(1.04);
+        }
+
+        .welcome-title {
+            color: #ffffff;
+            font-size: 32px;
+            font-weight: 900;
+            margin-bottom: 10px;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #ffffff 0%, #e2e8f0 60%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .welcome-subtitle {
+            color: #94a3b8;
+            font-size: 15px;
+            margin-bottom: 28px;
+            line-height: 1.6;
+            font-weight: 500;
+        }
+
+        .welcome-loader-container {
+            width: 220px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            margin: 20px auto 0 auto;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .welcome-loader-bar {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6 0%, #f59e0b 50%, #10b981 100%);
+            border-radius: 10px;
+            box-shadow: 0 0 12px rgba(59, 130, 246, 0.8);
+            animation: fillLoader 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes fillLoader {
+            0% { width: 0%; }
+            100% { width: 100%; }
+        }
+
+        .welcome-actions-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 10px;
+        }
+
+        .welcome-lang-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 800;
+            padding: 14px 22px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            height: 52px;
+        }
+
+        .welcome-lang-btn:hover {
+            background: rgba(255, 255, 255, 0.18);
+            transform: translateY(-2px);
+            color: #38bdf8;
+        }
+
+        /* Success SVG Animation */
+        .success-icon-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .success-icon-circle {
+            width: 76px;
+            height: 76px;
+            border-radius: 50%;
+            background: #d1fae5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #a7f3d0;
+        }
+
+        .checkmark {
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            display: block;
+            stroke-width: 3.5;
+            stroke: #059669;
+            stroke-miterlimit: 10;
+            animation: fill .4s ease-in-out .4s forwards, scale .3s ease-in-out .9s;
+        }
+
+        .checkmark__circle {
+            stroke-dasharray: 166;
+            stroke-dashoffset: 166;
+            stroke-width: 3.5;
+            stroke-miterlimit: 10;
+            stroke: #059669;
+            fill: none;
+            animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+        }
+
+        .checkmark__check {
+            transform-origin: 50% 50%;
+            stroke-dasharray: 48;
+            stroke-dashoffset: 48;
+            stroke: #059669;
+            animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.6s forwards;
+        }
+
+        @keyframes stroke {
+            100% { stroke-dashoffset: 0; }
+        }
+
+        @keyframes fill {
+            100% { box-shadow: inset 0px 0px 0px 30px rgba(16, 185, 129, 0.1); }
+        }
+
+        @keyframes scale {
+            0%, 100% { transform: none; }
+            50% { transform: scale3d(1.1, 1.1, 1); }
+        }
+
+        /* Responsive Breakpoints for Mobile Phones */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px 8px;
+            }
+
+            .header-section {
+                gap: 8px;
+                margin-bottom: 18px;
+            }
+
+            .header-main-box {
+                padding: 8px 12px;
+                border-radius: 16px;
+                gap: 8px;
+                min-width: 0;
+            }
+
+            .logo-container {
+                padding: 4px 8px;
+                border-radius: 10px;
+                flex-shrink: 0;
+            }
+
+            .company-logo {
+                max-height: 32px;
+            }
+
+            .header-text {
+                font-size: 13px;
+                letter-spacing: 0.5px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                min-width: 0;
+            }
+
+            .header-inner-actions .admin-btn {
+                min-width: 36px;
+                height: 36px;
+                font-size: 12px;
+                border-radius: 10px;
+                flex-shrink: 0;
+            }
+
+            .standalone-admin-btn {
+                width: 40px;
+                height: 40px;
+                border-radius: 12px;
+                font-size: 15px;
+                flex-shrink: 0;
+            }
+
+            .form-card, .admin-panel {
+                padding: 24px 16px;
+                border-radius: var(--radius-md);
+            }
+
+            .form-title {
+                font-size: 22px;
+                margin-bottom: 22px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 0;
+            }
+
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+
+            .stat-number {
+                font-size: 24px;
+            }
+
+            .stat-label {
+                font-size: 11px;
+            }
+
+            .filter-bar {
+                border-radius: 16px;
+                padding: 4px;
+            }
+
+            .filter-btn {
+                padding: 7px 12px;
+                font-size: 12px;
+                flex: 1 1 auto;
+            }
+
+            .welcome-title {
+                font-size: 24px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .header-main-box {
+                padding: 6px 8px;
+                gap: 6px;
+            }
+
+            .logo-container {
+                padding: 3px 6px;
+            }
+
+            .company-logo {
+                max-height: 28px;
+            }
+
+            .header-text {
+                font-size: 11px;
+                letter-spacing: 0.2px;
+            }
+
+            .header-inner-actions .admin-btn {
+                min-width: 32px;
+                height: 32px;
+                font-size: 11px;
+            }
+
+            .standalone-admin-btn {
+                width: 36px;
+                height: 36px;
+                font-size: 14px;
+            }
+
+            .app-details {
+                grid-template-columns: 1fr;
+            }
+
+            .card-actions {
+                justify-content: stretch;
+            }
+
+            .action-btn {
+                flex: 1;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Fast Corporate Welcome Screen -->
+    <div id="welcomeScreen" class="welcome-screen" onclick="enterSystem()">
+        <div class="welcome-bg-glow welcome-bg-glow-1"></div>
+        <div class="welcome-bg-glow welcome-bg-glow-2"></div>
+        <div class="welcome-content">
+            <img src="logo.png" alt="Labo Nedjma" class="welcome-logo" onerror="this.outerHTML='<h1 style=\'color:white;text-shadow:2px 2px 4px rgba(0,0,0,0.3);\'>🌟 Labo-Nedjma</h1>'">
+            <h1 class="welcome-title" data-i18n="welcomeTitle">نظام التوظيف الإلكتروني</h1>
+            <p class="welcome-subtitle" data-i18n="welcomeSubtitle">مرحباً بك في بوابة التوظيف الخاصة بمختبرات نجمة</p>
+            
+            <!-- Fast Loader Bar -->
+            <div class="welcome-loader-container">
+                <div class="welcome-loader-bar"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="mainContainer" style="display: none; opacity: 0; transition: opacity 0.5s ease;">
+    <div class="container">
+        <!-- Header Section -->
+        <div class="header-section">
+            <div class="header-main-box">
+                <div class="logo-container">
+                    <img src="logo.png" alt="Labo Nedjma" class="company-logo" onerror="this.outerHTML='<h2 style=\'color:white;text-shadow:2px 2px 4px rgba(0,0,0,0.3);\'>🌟 Labo-Nedjma</h2>'">
+                </div>
+                <div class="header-text">Labo Recrutement</div>
+                <div class="header-inner-actions">
+                    <button id="pwaInstallBtn" class="admin-btn" style="display: none; background: linear-gradient(135deg, #059669, #10b981); color: white;" onclick="triggerPwaInstall()" title="تثبيت التطبيق / Installer l'application">
+                        📥
+                    </button>
+                    <button id="langBtn" class="admin-btn" style="background: linear-gradient(135deg, #0284c7, #38bdf8); color: white;" onclick="toggleLanguage()" title="Changer la langue / تغيير اللغة">
+                        FR
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Standalone Admin Button -->
+            <button id="headerAdminBtn" class="standalone-admin-btn" onclick="handleHeaderAdminBtnClick()" title="دخول المدير / Connexion Admin">
+                🔐
+            </button>
+        </div>
+
+        <!-- Main Application Form -->
+        <div class="form-card" id="mainForm">
+            <h2 class="form-title" data-i18n="formTitle">📝 استمارة طالب توظيف</h2>
+            <form id="applicationForm" onsubmit="submitApplication(event)">
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label data-i18n="fullNameLabel">👤 الاسم واللقب</label>
+                        <input type="text" id="fullName" placeholder="أدخل الاسم واللقب الكامل" data-i18n-placeholder="fullNamePlaceholder" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label data-i18n="birthDateLabel">📅 تاريخ الازدياد</label>
+                        <input type="date" id="birthDate" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label data-i18n="phoneLabel">📱 رقم الهاتف</label>
+                        <input type="tel" id="phone" placeholder="أدخل رقم الهاتف" data-i18n-placeholder="phonePlaceholder" pattern="[0-9]{10}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label data-i18n="stateLabel">📍 الولاية</label>
+                        <input type="text" id="state" placeholder="أدخل اسم الولاية" data-i18n-placeholder="statePlaceholder" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label data-i18n="municipalityLabel">🏢 البلدية</label>
+                        <input type="text" id="municipality" placeholder="أدخل اسم البلدية" data-i18n-placeholder="municipalityPlaceholder" required>
+                    </div>
+                    
+                    <div class="form-group full-width">
+                        <label data-i18n="neighborhoodLabel"><ctrl42> الشارع</label>
+                        <input type="text" id="neighborhood" placeholder="أدخل اسم الشارع" data-i18n-placeholder="neighborhoodPlaceholder" required>
+                    </div>
+                    
+                    <div class="form-group full-width">
+                        <label data-i18n="skillsLabel">💡 المهارات الممتلكة (اختياري)</label>
+                        <textarea id="skills" placeholder="اذكر المهارات التي تتقنها..." data-i18n-placeholder="skillsPlaceholder" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="form-group full-width">
+                        <label data-i18n="experienceLabel">💼 الخبرة السابقة (اختياري)</label>
+                        <textarea id="experience" placeholder="اذكر خبراتك السابقة إن وجدت..." data-i18n-placeholder="experiencePlaceholder" rows="3"></textarea>
+                    </div>
+
+                    <!-- Supabase CV File Upload Field -->
+                    <div class="form-group full-width">
+                        <label data-i18n="cvLabel">📄 السيرة الذاتية (PDF - 5MB كحد أقصى)</label>
+                        <div class="cv-dropzone" id="cvDropzone">
+                            <input type="file" id="cvFile" accept=".pdf,application/pdf" onchange="handleCVFileSelect(event)" style="display: none;">
+                            <button type="button" class="cv-select-btn" onclick="document.getElementById('cvFile').click()">
+                                <span data-i18n="cvChooseBtn">📁 اختر ملف السيرة الذاتية (PDF)</span>
+                            </button>
+                            <span id="cvFileNameDisplay" class="cv-filename-display"></span>
+                        </div>
+                        <div id="cvFileError" class="cv-file-error" style="display: none; color: #ef4444; font-size: 13px; margin-top: 6px; font-weight: 700;"></div>
+                        <div id="cvProgressWrapper" style="display: none; margin-top: 10px;">
+                            <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 4px;">
+                                <span id="cvProgressText">جاري رفع السيرة الذاتية...</span>
+                                <span id="cvProgressPercent">0%</span>
+                            </div>
+                            <div style="width: 100%; height: 6px; background: #e2e8f0; border-radius: 10px; overflow: hidden;">
+                                <div id="cvProgressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #2563eb, #10b981); transition: width 0.3s ease;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button type="submit" class="submit-btn">
+                    <span data-i18n="submitBtn">📤 إرسال الطلب</span>
+                </button>
+            </form>
+        </div>
+
+        <!-- Success Modal -->
+        <div class="modal" id="successModal">
+            <div class="modal-content" style="text-align: center;">
+                <div class="success-icon-wrapper">
+                    <div class="success-icon-circle">
+                        <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                            <circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none"/>
+                            <path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+                        </svg>
+                    </div>
+                </div>
+                <h3 style="color: #059669; font-size: 24px; margin-bottom: 12px; font-weight: 800;" data-i18n="successMsgTitle">تم الإرسال بنجاح!</h3>
+                <p style="color: #475569; font-size: 15px; line-height: 1.6; margin-bottom: 26px;" data-i18n="successMsgDesc">لقد تم استلام طلب التوظيف الخاص بك بنجاح. سيقوم فريق الموارد البشرية بمراجعة ملفك والتواصل معك قريباً.</p>
+                <button class="submit-btn" style="width: auto; padding: 12px 36px; margin: 0 auto; background: linear-gradient(135deg, #059669, #10b981); border-radius: 50px;" onclick="closeSuccessModal()">
+                    <span data-i18n="closeBtn">حسناً</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Admin Login Modal -->
+        <div class="modal" id="adminModal">
+            <div class="modal-content">
+                <span class="close-btn" onclick="closeAdminModal()">&times;</span>
+                <h3 class="modal-title" data-i18n="adminLoginTitle">🔐 دخول المدير</h3>
+                <form id="adminLoginForm" onsubmit="adminLogin(event)">
+                    <div class="form-group">
+                        <label data-i18n="emailLabel">📧 البريد الإلكتروني</label>
+                        <input type="email" id="adminEmail" placeholder="admin@labo-nedjma.com" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label data-i18n="passwordLabel">🔒 كلمة السر</label>
+                        <input type="password" id="adminPassword" placeholder="أدخل كلمة السر" data-i18n-placeholder="passwordPlaceholder" required>
+                    </div>
+                    
+                    <button type="submit" class="submit-btn">
+                        <span data-i18n="loginBtn">🔓 تسجيل الدخول</span>
+                    </button>
+                </form>
+                <div class="error-message" id="loginError" data-i18n="loginError">
+                    ❌ البريد الإلكتروني أو كلمة السر غير صحيحة
+                </div>
+            </div>
+        </div>
+        
+        <!-- Notification Prompt Modal -->
+        <div class="modal" id="notifPromptModal" style="display: none;">
+            <div class="modal-content" style="text-align: center;">
+                <div style="font-size: 50px; margin-bottom: 16px; animation: pulse 2s infinite;">🔔</div>
+                <h3 style="color: var(--primary-dark); font-size: 22px; margin-bottom: 12px; font-weight: 800;" id="notifPromptTitle" data-i18n="notifModalTitle">تفعيل الإشعارات الإدارية</h3>
+                <p style="color: #475569; font-size: 14px; line-height: 1.6; margin-bottom: 24px;" id="notifPromptDesc" data-i18n="notifModalDesc">لتلقي تنبيهات منبثقة فورية على شاشة جهازك عند تقديم أي مرشح لطلب توظيف جديد، يرجى تفعيل الإشعارات.</p>
+                <div style="display: flex; flex-direction: column; gap: 10px; align-items: center; width: 100%;">
+                    <button class="submit-btn" id="notifPromptAllowBtn" onclick="requestNotifPermissionAndClose()" style="width: 100%; border-radius: 50px;">
+                        <span id="notifPromptAllowText" data-i18n="allowBtn">تفعيل الإشعارات الآن 🔔</span>
+                    </button>
+                    <button onclick="closeNotifPromptModal()" id="notifPromptDismissBtn" style="background: none; border: none; color: #94a3b8; font-weight: 700; cursor: pointer; display: block; width: 100%; text-align: center; font-size: 13px; margin-top: 4px;" data-i18n="dismissBtn">لاحقاً</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Confirm Modal -->
+        <div class="modal" id="confirmModal" style="display: none; z-index: 2100;">
+            <div class="modal-content" style="text-align: center;">
+                <div style="font-size: 46px; margin-bottom: 12px;">⚠️</div>
+                <h3 id="confirmModalTitle" style="color: #dc2626; font-size: 20px; margin-bottom: 10px; font-weight: 800;"></h3>
+                <p id="confirmModalText" style="color: #475569; font-size: 14px; line-height: 1.6; margin-bottom: 22px;"></p>
+                <div style="display: flex; gap: 12px; justify-content: center; width: 100%;">
+                    <button class="submit-btn" id="confirmCancelBtn" onclick="closeConfirmModal()" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; box-shadow: none; width: auto; flex: 1; padding: 12px; font-size: 14px; border-radius: 50px;">
+                        إلغاء / Annuler
+                    </button>
+                    <button class="submit-btn" id="confirmOkBtn" onclick="handleConfirmOk()" style="background: linear-gradient(135deg, #dc2626, #b91c1c); box-shadow: 0 4px 15px rgba(220, 38, 38, 0.3); width: auto; flex: 1; padding: 12px; font-size: 14px; border-radius: 50px;">
+                        تأكيد / Confirmer
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Panel -->
+        <div class="admin-panel" id="adminPanel" style="display: none;">
+            <div class="admin-top-bar" style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 24px; gap: 15px; flex-wrap: wrap; width: 100%;">
+                
+                <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                    <!-- Live Notifications Bell Icon & Dropdown -->
+                    <div style="position: relative; display: inline-block;">
+                        <button id="notificationBellBtn" onclick="toggleNotificationDropdown()" style="background: #f1f5f9; border: 1px solid #e2e8f0; color: var(--primary-dark); border-radius: 50%; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; position: relative; transition: var(--transition);">
+                            🔔
+                            <span id="notificationBadge" style="position: absolute; top: -4px; right: -4px; background: #ef4444; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; font-weight: 800; display: none; align-items: center; justify-content: center; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.15);">0</span>
+                        </button>
+                        
+                        <!-- Notifications Dropdown -->
+                        <div id="notificationsDropdown" style="display: none; position: absolute; top: 52px; width: 320px; background: white; border-radius: var(--radius-md); box-shadow: var(--shadow-lg); border: 1px solid #e2e8f0; z-index: 1000; overflow: hidden;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid #f1f5f9; background: #f8fafc;">
+                                <span style="font-weight: 800; color: var(--primary-dark); font-size: 14px;" data-i18n="notifTitle">🔔 الإشعارات الواردة</span>
+                                <button onclick="clearAllNotifications()" style="background: none; border: none; color: #ef4444; font-size: 12px; font-weight: 700; cursor: pointer;" data-i18n="clearNotifs">مسح الكل</button>
+                            </div>
+                            <div id="notificationsItemsList" style="max-height: 260px; overflow-y: auto;">
+                                <!-- Dynamic notifications -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Logged-in Email Badge -->
+                    <div class="admin-logged-in" style="background: #f1f5f9; border: 1px solid #e2e8f0; padding: 8px 16px; border-radius: 50px; font-weight: 700; color: var(--primary-dark); font-size: 13px; display: flex; align-items: center; gap: 8px;">
+                        <span>👤</span>
+                        <span id="adminLoggedEmail">admin@labo-nedjma.com</span>
+                    </div>
+                </div>
+            </div>
+            
+            <h2 class="admin-title" data-i18n="adminPanelTitle">📋 لوحة تحكم المدير</h2>
+            
+            <div class="stats">
+                <div class="stat-card stat-card-total">
+                    <div class="stat-number" id="totalApplications">0</div>
+                    <div class="stat-label" data-i18n="totalApps">إجمالي الطلبات</div>
+                </div>
+                <div class="stat-card stat-card-pending">
+                    <div class="stat-number" id="pendingApplications">0</div>
+                    <div class="stat-label" data-i18n="pendingApps">جديدة / معلقة</div>
+                </div>
+                <div class="stat-card stat-card-accepted">
+                    <div class="stat-number" id="acceptedApplications">0</div>
+                    <div class="stat-label" data-i18n="acceptedApps">طلبات مقبولة</div>
+                </div>
+                <div class="stat-card stat-card-rejected">
+                    <div class="stat-number" id="rejectedApplications">0</div>
+                    <div class="stat-label" data-i18n="rejectedApps">طلبات مرفوضة</div>
+                </div>
+            </div>
+
+            <!-- Admin Executive Toolbar (Filters & Search Bar) -->
+            <div class="admin-toolbar" style="display: flex; justify-content: space-between; align-items: center; gap: 15px; margin-bottom: 28px; flex-wrap: wrap;">
+                <div class="filter-bar" style="margin-bottom: 0;">
+                    <button class="filter-btn filter-all active" id="filter-all" onclick="filterApplications('all')"><span data-i18n="filterAll">الكل</span></button>
+                    <button class="filter-btn filter-pending" id="filter-pending" onclick="filterApplications('pending')"><span data-i18n="filterPending">جديدة / معلقة</span></button>
+                    <button class="filter-btn filter-accepted" id="filter-accepted" onclick="filterApplications('accepted')"><span data-i18n="filterAccepted">طلبات مقبولة</span></button>
+                    <button class="filter-btn filter-rejected" id="filter-rejected" onclick="filterApplications('rejected')"><span data-i18n="filterRejected">طلبات مرفوضة</span></button>
+                </div>
+                
+                <div class="admin-search-wrapper" style="position: relative; flex: 1; max-width: 360px; min-width: 240px;">
+                    <input type="text" id="adminSearchInput" onkeyup="handleAdminSearch()" placeholder="🔍 البحث باسم المرشح، الولاية، أو الهاتف..." style="width: 100%; padding: 11px 18px; border: 1.5px solid #cbd5e1; border-radius: 50px; font-size: 14px; background: #ffffff; box-shadow: 0 2px 8px rgba(0,0,0,0.04); outline: none; transition: var(--transition);">
+                </div>
+            </div>
+            
+            <div class="applications-list" id="applicationsList">
+                <div class="no-applications" data-i18n="noApps">لا توجد طلبات حتى الآن</div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <script>
+        // Firebase Configuration & Initialization
+        const firebaseConfig = {
+          apiKey: "AIzaSyCHA5lKFGB9hnLHX-GNY_R_Jh3I9u1k9-c",
+          authDomain: "labo-recrutement.firebaseapp.com",
+          projectId: "labo-recrutement",
+          storageBucket: "labo-recrutement.firebasestorage.app",
+          messagingSenderId: "207894405502",
+          appId: "1:207894405502:web:6c7704d29cbdaa17c4532f",
+          measurementId: "G-10BTTJTCPP"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Enforce persistent local session storage
+        firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+            .then(() => {
+                console.log("Firebase Auth persistence successfully set to LOCAL");
+            })
+            .catch((error) => {
+                console.error("Error setting Firebase Auth persistence:", error);
+            });
+
+        const translations = {
+            ar: {
+                formTitle: "📝 استمارة طالب توظيف", fullNameLabel: "👤 الاسم واللقب", fullNamePlaceholder: "أدخل الاسم واللقب الكامل",
+                birthDateLabel: "📅 تاريخ الازدياد", stateLabel: "📍 الولاية", statePlaceholder: "أدخل اسم الولاية",
+                municipalityLabel: "🏢 البلدية", municipalityPlaceholder: "أدخل اسم البلدية",
+                neighborhoodLabel: "<ctrl42> الشارع", neighborhoodPlaceholder: "أدخل اسم الشارع",
+                phoneLabel: "📱 رقم الهاتف", phonePlaceholder: "أدخل رقم الهاتف",
+                skillsLabel: "💡 المهارات الممتلكة (اختياري)", skillsPlaceholder: "اذكر المهارات التي تتقنها...",
+                experienceLabel: "💼 الخبرة السابقة (اختياري)", experiencePlaceholder: "اذكر خبراتك السابقة إن وجدت...",
+                submitBtn: "📤 إرسال الطلب", successMsgTitle: "تم الإرسال بنجاح!", successMsgDesc: "لقد تم استلام طلب التوظيف الخاص بك بنجاح. سيقوم فريق الموارد البشرية بمراجعة ملفك والتواصل معك قريباً.", closeBtn: "حسناً",
+                welcomeTitle: "نظام التوظيف الإلكتروني", welcomeSubtitle: "مرحباً بك في بوابة التوظيف الخاصة بمختبرات نجمة", welcomeBtn: "الدخول للنظام 🚀",
+                adminLoginTitle: "🔐 دخول المدير", emailLabel: "📧 البريد الإلكتروني",
+                passwordLabel: "🔒 كلمة السر", passwordPlaceholder: "أدخل كلمة السر",
+                loginBtn: "🔓 تسجيل الدخول", loginError: "❌ البريد الإلكتروني أو كلمة السر غير صحيحة",
+                backBtn: "← العودة للرئيسية", adminPanelTitle: "📋 لوحة تحكم المدير",
+                totalApps: "إجمالي الطلبات", todayApps: "طلبات اليوم", noApps: "لا توجد طلبات حتى الآن",
+                pendingApps: "جديدة / معلقة", acceptedApps: "طلبات مقبولة", rejectedApps: "طلبات مرفوضة",
+                filterAll: "الكل", filterPending: "جديدة / معلقة", filterAccepted: "طلبات مقبولة", filterRejected: "طلبات مرفوضة",
+                statusPendingLabel: "معلقة", statusAcceptedLabel: "مقبول", statusRejectedLabel: "مرفوض",
+                btnAcceptLabel: "قبول ✅", btnRejectLabel: "رفض ❌", btnDeleteLabel: "حذف 🗑️",
+                detBirth: "تاريخ الازدياد:", detState: "الولاية:", detMun: "البلدية:",
+                detNeigh: "الشارع:", detPhone: "رقم الهاتف:", detSkills: "المهارات:", detExp: "الخبرة:",
+                notifTitle: "🔔 الإشعارات الواردة", clearNotifs: "مسح الكل",
+                searchPlaceholder: "🔍 البحث باسم المرشح، الولاية، أو الهاتف...",
+                cvLabel: "📄 السيرة الذاتية (PDF - 5MB كحد أقصى)", cvChooseBtn: "📁 اختر ملف السيرة الذاتية (PDF)",
+                btnViewCV: "عرض CV", btnDownloadCV: "تحميل CV", detCV: "السيرة الذاتية:"
+            },
+            fr: {
+                formTitle: "📝 Formulaire de Candidature", fullNameLabel: "👤 Nom et Prénom", fullNamePlaceholder: "Entrez votre nom et prénom complets",
+                birthDateLabel: "📅 Date de Naissance", stateLabel: "📍 Wilaya", statePlaceholder: "Entrez le nom de la wilaya",
+                municipalityLabel: "🏢 Commune", municipalityPlaceholder: "Entrez le nom de la commune",
+                neighborhoodLabel: "🛣️ Rue", neighborhoodPlaceholder: "Entrez le nom de la rue",
+                phoneLabel: "📱 Numéro de Téléphone", phonePlaceholder: "Entrez votre numéro de téléphone",
+                skillsLabel: "💡 Compétences (Optionnel)", skillsPlaceholder: "Mentionnez vos compétences...",
+                experienceLabel: "💼 Expérience (Optionnel)", experiencePlaceholder: "Mentionnez vos expériences précédentes...",
+                submitBtn: "📤 Soumettre la Candidature", successMsgTitle: "Candidature Envoyée!", successMsgDesc: "Votre candidature a été reçue avec succès. Notre équipe RH l'examinera et vous contactera bientôt.", closeBtn: "D'accord",
+                welcomeTitle: "Système de Recrutement", welcomeSubtitle: "Bienvenue sur le portail de recrutement des Laboratoires Nedjma", welcomeBtn: "Entrer 🚀",
+                adminLoginTitle: "🔐 Connexion Admin", emailLabel: "📧 Email",
+                passwordLabel: "🔒 Mot de passe", passwordPlaceholder: "Entrez votre mot de passe",
+                loginBtn: "🔓 Se Connecter", loginError: "❌ Email ou mot de passe incorrect",
+                backBtn: "← Retour à l'accueil", adminPanelTitle: "📋 Panneau d'Administration",
+                totalApps: "Total des Candidatures", todayApps: "Candidatures du Jour", noApps: "Aucune candidature pour le moment",
+                pendingApps: "En Attente", acceptedApps: "Candidatures Acceptées", rejectedApps: "Candidatures Refusées",
+                filterAll: "Tout", filterPending: "En Attente", filterAccepted: "Acceptées", filterRejected: "Refusées",
+                statusPendingLabel: "En attente", statusAcceptedLabel: "Accepté", statusRejectedLabel: "Refusé",
+                btnAcceptLabel: "Accepter ✅", btnRejectLabel: "Refuser ❌", btnDeleteLabel: "Supprimer 🗑️",
+                detBirth: "Date de Naissance:", detState: "Wilaya:", detMun: "Commune:",
+                detNeigh: "Rue:", detPhone: "Téléphone:", detSkills: "Compétences:", detExp: "Expérience:",
+                notifTitle: "🔔 Notifications Reçues", clearNotifs: "Tout effacer",
+                searchPlaceholder: "🔍 Rechercher par nom, wilaya, téléphone...",
+                cvLabel: "📄 Curriculum Vitae (Format PDF - 5MB max)", cvChooseBtn: "📁 Choisir un fichier CV (PDF)",
+                btnViewCV: "Voir CV", btnDownloadCV: "Télécharger CV", detCV: "Curriculum Vitae:"
+            }
+        };
+
+        let currentLang = localStorage.getItem('laboNedjmaLanguage') || 'ar';
+        let notificationsEnabled = localStorage.getItem('laboNedjmaNotificationsEnabled') === 'true';
+
+        function closeNotifPromptModal() {
+            localStorage.setItem('notifPromptDismissed', 'true');
+            document.getElementById('notifPromptModal').style.display = 'none';
+        }
+
+        function requestNotifPermissionAndClose() {
+            if (!("Notification" in window)) return;
+            
+            Notification.requestPermission().then(permission => {
+                if (permission === 'granted') {
+                    notificationsEnabled = true;
+                    localStorage.setItem('laboNedjmaNotificationsEnabled', 'true');
+                    localStorage.removeItem('notifPromptDismissed');
+                    
+                    document.getElementById('notifPromptModal').style.display = 'none';
+                    
+                    new Notification(currentLang === 'ar' ? "Labo Nedjma Recruitment 🌟" : "Recrutement Labo Nedjma 🌟", {
+                        body: currentLang === 'ar' ? "تم تفعيل الإشعارات الإدارية بنجاح!" : "Notifications administratives activées avec succès!",
+                        icon: "logo.png"
+                    });
+                } else {
+                    const desc = document.getElementById('notifPromptDesc');
+                    const allowBtn = document.getElementById('notifPromptAllowBtn');
+                    const allowText = document.getElementById('notifPromptAllowText');
+                    if (desc && allowBtn) {
+                        desc.textContent = currentLang === 'ar' ? 
+                            "❌ الإشعارات محظورة في متصفحك حالياً. ييرجى تفعيل الإشعارات من إعدادات المتصفح (أيقونة القفل بجانب شريط العنوان) لتلقي تنبيهات التوظيف." : 
+                            "❌ Les notifications sont bloquées. Veuillez les autoriser dans les paramètres de votre navigateur (icône cadenas) pour recevoir des alertes.";
+                        
+                        localStorage.setItem('notifPromptDismissed', 'true');
+                        allowBtn.onclick = function() {
+                            document.getElementById('notifPromptModal').style.display = 'none';
+                        };
+                        if (allowText) {
+                            allowText.textContent = currentLang === 'ar' ? "حسناً فهمت" : "D'accord, j'ai compris";
+                        }
+                    }
+                }
+            });
+        }
+
+        function autoCheckAndPromptNotifications() {
+            if (!("Notification" in window)) return;
+            
+            const isLocalEnabled = localStorage.getItem('laboNedjmaNotificationsEnabled') === 'true';
+            
+            if (Notification.permission === 'granted' || isLocalEnabled) {
+                notificationsEnabled = true;
+                localStorage.setItem('laboNedjmaNotificationsEnabled', 'true');
+                document.getElementById('notifPromptModal').style.display = 'none';
+            } else if (Notification.permission === 'default') {
+                if (localStorage.getItem('notifPromptDismissed') !== 'true') {
+                    document.getElementById('notifPromptModal').style.display = 'flex';
+                    
+                    const desc = document.getElementById('notifPromptDesc');
+                    const allowBtn = document.getElementById('notifPromptAllowBtn');
+                    const allowText = document.getElementById('notifPromptAllowText');
+                    if (desc && allowBtn) {
+                        desc.textContent = currentLang === 'ar' ? 
+                            "لتلقي تنبيهات منبثقة فورية على شاشة جهازك عند تقديم أي مرشح لطلب توظيف جديد، يرجى تفعيل الإشعارات." : 
+                            "Pour recevoir des alertes instantanées sur votre écran lorsqu'un candidat soumet un nouveau dossier, veuillez activer les notifications.";
+                        allowBtn.onclick = requestNotifPermissionAndClose;
+                        if (allowText) {
+                            allowText.textContent = currentLang === 'ar' ? "تفعيل الإشعارات الآن 🔔" : "Activer maintenant 🔔";
+                        }
+                    }
+                }
+            } else if (Notification.permission === 'denied') {
+                notificationsEnabled = false;
+                localStorage.setItem('laboNedjmaNotificationsEnabled', 'false');
+            }
+        }
+
+        function applyLanguage(lang) {
+            currentLang = lang;
+            localStorage.setItem('laboNedjmaLanguage', lang);
+            
+            document.documentElement.lang = lang;
+            document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+            
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[lang][key]) {
+                    el.innerHTML = translations[lang][key];
+                }
+            });
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                if (translations[lang][key]) {
+                    el.placeholder = translations[lang][key];
+                }
+            });
+            
+            const searchInput = document.getElementById('adminSearchInput');
+            if (searchInput && translations[lang].searchPlaceholder) {
+                searchInput.placeholder = translations[lang].searchPlaceholder;
+            }
+
+            const langBtn = document.getElementById('langBtn');
+            if(langBtn) {
+                langBtn.textContent = lang === 'ar' ? 'FR' : 'AR';
+            }
+            const welcomeLangText = document.getElementById('welcomeLangText');
+            if(welcomeLangText) {
+                welcomeLangText.textContent = lang === 'ar' ? 'FR' : 'AR';
+            }
+            
+            if (document.getElementById('adminPanel') && document.getElementById('adminPanel').style.display === 'block') {
+                updateNotificationsUI();
+                displayApplications();
+            }
+        }
+
+        function toggleLanguage() {
+            const nextLang = currentLang === 'ar' ? 'fr' : 'ar';
+            applyLanguage(nextLang);
+        }
+
+        // Apply saved language choice immediately on page load
+        applyLanguage(currentLang);
+
+        // Load applications & notifications from Firestore in real-time
+        let applications = [];
+        let notifications = [];
+
+        function initFirebaseSync() {
+            db.collection("applications").orderBy("submissionDate", "asc").onSnapshot((snapshot) => {
+                const updatedApps = [];
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    updatedApps.push({
+                        docId: doc.id,
+                        ...data
+                    });
+                });
+                
+                applications = updatedApps;
+                
+                if (document.getElementById('adminPanel').style.display === 'block') {
+                    displayApplications();
+                }
+            }, (error) => {
+                console.error("Error syncing applications: ", error);
+            });
+
+            db.collection("notifications").orderBy("createdAt", "desc").limit(50).onSnapshot((snapshot) => {
+                const updatedNotifs = [];
+                let hasNewUnread = false;
+                
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const notifObj = {
+                        docId: doc.id,
+                        ...data
+                    };
+                    updatedNotifs.push(notifObj);
+                    
+                    if (!data.read) {
+                        const alreadyExists = notifications.some(n => n.docId === doc.id);
+                        if (!alreadyExists) {
+                            hasNewUnread = true;
+                        }
+                    }
+                });
+
+                const isFirstLoad = (notifications.length === 0);
+                notifications = updatedNotifs;
+
+                if (hasNewUnread && !isFirstLoad) {
+                    playNotifSound();
+                    const newest = notifications[0];
+                    if (newest && notificationsEnabled && Notification.permission === 'granted') {
+                        new Notification(currentLang === 'ar' ? newest.titleAr : newest.titleFr, {
+                            body: currentLang === 'ar' ? newest.messageAr : newest.messageFr,
+                            icon: "logo.png"
+                        });
+                    }
+                }
+
+                updateNotificationsUI();
+            }, (error) => {
+                console.error("Error syncing notifications: ", error);
+            });
+        }
+
+        initFirebaseSync();
+
+        function playNotifSound() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+                osc.frequency.setValueAtTime(880, ctx.currentTime + 0.15);
+                gain.gain.setValueAtTime(0.1, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+                osc.start(ctx.currentTime);
+                osc.stop(ctx.currentTime + 0.4);
+            } catch (e) {
+                console.log("Audio play blocked/unsupported");
+            }
+        }
+
+        function toggleNotificationDropdown() {
+            const dropdown = document.getElementById('notificationsDropdown');
+            if (dropdown) {
+                dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+            }
+        }
+
+        function updateNotificationsUI() {
+            const badge = document.getElementById('notificationBadge');
+            const list = document.getElementById('notificationsItemsList');
+            if (!badge || !list) return;
+            
+            const unreadCount = notifications.filter(n => !n.read).length;
+            if (unreadCount > 0) {
+                badge.textContent = unreadCount;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+            
+            if (notifications.length === 0) {
+                list.innerHTML = `<div style="text-align: center; color: #94a3b8; padding: 25px; font-size: 13px;" data-i18n="noNotifs">${currentLang === 'ar' ? 'لا توجد إشعارات حالية' : 'Aucune notification'}</div>`;
+                return;
+            }
+            
+            list.innerHTML = notifications.map(notif => `
+                <div class="notif-item ${notif.read ? '' : 'unread'}" onclick="markAsRead('${notif.docId}')" style="padding: 12px 15px; border-bottom: 1px solid #f1f5f9; display: flex; gap: 10px; align-items: start; transition: all 0.2s; cursor: pointer; background: ${notif.read ? 'white' : 'rgba(59, 130, 246, 0.04)'};">
+                    <div style="background: rgba(59, 130, 246, 0.1); border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 14px;">📝</div>
+                    <div style="flex-grow: 1; text-align: ${currentLang === 'ar' ? 'right' : 'left'};">
+                        <div style="font-weight: 700; font-size: 13px; color: var(--primary-dark); margin-bottom: 2px;">
+                            ${currentLang === 'ar' ? notif.titleAr : notif.titleFr}
+                        </div>
+                        <div style="font-size: 12px; color: #475569; line-height: 1.4;">
+                            ${currentLang === 'ar' ? notif.messageAr : notif.messageFr}
+                        </div>
+                        <div style="font-size: 10px; color: #94a3b8; margin-top: 4px;">
+                            ${notif.time}
+                        </div>
+                    </div>
+                    ${notif.read ? '' : `<div style="width: 8px; height: 8px; background: #ef4444; border-radius: 50%; margin-top: 5px; flex-shrink: 0;"></div>`}
+                </div>
+            `).join('');
+        }
+
+        function markAsRead(docId) {
+            db.collection("notifications").doc(docId).update({
+                read: true
+            }).catch(err => console.error("Error marking as read: ", err));
+        }
+
+        function clearAllNotifications() {
+            db.collection("notifications").get().then((snapshot) => {
+                const batch = db.batch();
+                snapshot.forEach((doc) => {
+                    batch.delete(doc.ref);
+                });
+                return batch.commit();
+            }).catch(err => console.error("Error clearing notifications: ", err));
+        }
+
+        // Filter state
+        let currentFilter = 'all';
+
+        function filterApplications(status) {
+            currentFilter = status;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            const activeBtn = document.getElementById(`filter-${status}`);
+            if (activeBtn) {
+                activeBtn.classList.add('active');
+            }
+            displayApplications();
+        }
+
+        function updateStatus(docId, newStatus) {
+            db.collection("applications").doc(docId).update({
+                status: newStatus
+            }).catch(err => console.error("Error updating status: ", err));
+        }
+
+        let confirmCallback = null;
+        function showConfirm(title, message, onConfirm) {
+            document.getElementById('confirmModalTitle').textContent = title;
+            document.getElementById('confirmModalText').textContent = message;
+            
+            const cancelBtn = document.getElementById('confirmCancelBtn');
+            const okBtn = document.getElementById('confirmOkBtn');
+            cancelBtn.textContent = currentLang === 'ar' ? 'إلغاء' : 'Annuler';
+            okBtn.textContent = currentLang === 'ar' ? 'تأكيد' : 'Confirmer';
+            
+            confirmCallback = onConfirm;
+            document.getElementById('confirmModal').style.display = 'flex';
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('confirmModal').style.display = 'none';
+            confirmCallback = null;
+        }
+
+        function handleConfirmOk() {
+            if (confirmCallback) {
+                confirmCallback();
+            }
+            closeConfirmModal();
+        }
+
+        function deleteApplication(docId) {
+            const confirmTitle = currentLang === 'ar' ? 'حذف طلب التوظيف ⚠️' : 'Supprimer la candidature ⚠️';
+            const confirmMsg = currentLang === 'ar' ? 'هل أنت متأكد من حذف هذا الطلب نهائياً من النظام؟' : 'Êtes-vous sûr de vouloir supprimer cette candidature définitivement du système ?';
+            
+            showConfirm(confirmTitle, confirmMsg, () => {
+                db.collection("applications").doc(docId).delete().catch(err => console.error("Error deleting application: ", err));
+            });
+        }
+
+        let autoEnterTimer = null;
+        if (localStorage.getItem('adminLoggedIn') !== 'true') {
+            autoEnterTimer = setTimeout(() => {
+                enterSystem();
+            }, 1200);
+        }
+
+        function enterSystem() {
+            if (autoEnterTimer) {
+                clearTimeout(autoEnterTimer);
+                autoEnterTimer = null;
+            }
+            const welcome = document.getElementById('welcomeScreen');
+            const mainContainer = document.getElementById('mainContainer');
+            if (welcome && welcome.style.display !== 'none') {
+                welcome.style.opacity = '0';
+                setTimeout(() => {
+                    welcome.style.display = 'none';
+                    mainContainer.style.display = 'block';
+                    setTimeout(() => {
+                        mainContainer.style.opacity = '1';
+                    }, 40);
+                }, 350);
+            }
+        }
+
+        function openAdminModal() {
+            document.getElementById('adminModal').style.display = 'flex';
+            document.getElementById('loginError').style.display = 'none';
+            document.getElementById('adminLoginForm').reset();
+        }
+
+        function closeAdminModal() {
+            document.getElementById('adminModal').style.display = 'none';
+        }
+
+        function adminLogin(event) {
+            event.preventDefault();
+            
+            const email = document.getElementById('adminEmail').value;
+            const password = document.getElementById('adminPassword').value;
+            
+            firebase.auth().signInWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    localStorage.setItem('adminLoggedIn', 'true');
+                    document.getElementById('adminModal').style.display = 'none';
+                })
+                .catch((error) => {
+                    document.getElementById('loginError').style.display = 'block';
+                });
+        }
+
+        function logout() {
+            localStorage.removeItem('adminLoggedIn');
+            firebase.auth().signOut().catch(err => console.error("Error signing out: ", err));
+        }
+
+        function handleHeaderAdminBtnClick() {
+            if (firebase.auth().currentUser) {
+                logout();
+            } else {
+                openAdminModal();
+            }
+        }
+
+        // Firebase Auth State Listener
+        firebase.auth().onAuthStateChanged((user) => {
+            const headerBtn = document.getElementById('headerAdminBtn');
+            
+            if (user) {
+                localStorage.setItem('adminLoggedIn', 'true');
+                if (autoEnterTimer) {
+                    clearTimeout(autoEnterTimer);
+                }
+                const welcome = document.getElementById('welcomeScreen');
+                if (welcome) welcome.style.display = 'none';
+                
+                const mainContainer = document.getElementById('mainContainer');
+                if (mainContainer) {
+                    mainContainer.style.display = 'block';
+                    mainContainer.style.opacity = '1';
+                }
+
+                if (headerBtn) {
+                    headerBtn.innerHTML = '🚪';
+                    headerBtn.title = currentLang === 'ar' ? 'تسجيل الخروج' : 'Déconnexion';
+                }
+
+                document.getElementById('adminLoggedEmail').textContent = user.email;
+                document.getElementById('mainForm').style.display = 'none';
+                document.getElementById('adminPanel').style.display = 'block';
+                
+                autoCheckAndPromptNotifications();
+                updateNotificationsUI();
+                displayApplications();
+            } else {
+                localStorage.removeItem('adminLoggedIn');
+                if (headerBtn) {
+                    headerBtn.innerHTML = '🔐';
+                    headerBtn.title = currentLang === 'ar' ? 'دخول المدير / Connexion Admin' : 'Connexion Admin / دخول المدير';
+                }
+                document.getElementById('adminPanel').style.display = 'none';
+                document.getElementById('mainForm').style.display = 'block';
+            }
+        });
+
+        let selectedCVFile = null;
+
+        function handleCVFileSelect(event) {
+            const file = event.target.files[0];
+            const fileError = document.getElementById('cvFileError');
+            const fileNameDisplay = document.getElementById('cvFileNameDisplay');
+            
+            if (!file) {
+                selectedCVFile = null;
+                if (fileNameDisplay) fileNameDisplay.textContent = '';
+                if (fileError) fileError.style.display = 'none';
+                return;
+            }
+
+            const validation = validateCVFile(file, currentLang);
+            if (!validation.valid) {
+                selectedCVFile = null;
+                event.target.value = '';
+                if (fileNameDisplay) fileNameDisplay.textContent = '';
+                if (fileError) {
+                    fileError.textContent = validation.error;
+                    fileError.style.display = 'block';
+                }
+                return;
+            }
+
+            selectedCVFile = file;
+            if (fileError) fileError.style.display = 'none';
+            if (fileNameDisplay) {
+                const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+                fileNameDisplay.textContent = `📄 ${file.name} (${sizeMB} MB)`;
+            }
+        }
+
+        async function submitApplication(event) {
+            event.preventDefault();
+            
+            const submitBtn = document.querySelector('#applicationForm button[type="submit"]');
+            const fileError = document.getElementById('cvFileError');
+            const progressWrapper = document.getElementById('cvProgressWrapper');
+            const progressBar = document.getElementById('cvProgressBar');
+            const progressPercent = document.getElementById('cvProgressPercent');
+            const progressText = document.getElementById('cvProgressText');
+
+            let cvData = null;
+
+            if (selectedCVFile) {
+                const validation = validateCVFile(selectedCVFile, currentLang);
+                if (!validation.valid) {
+                    if (fileError) {
+                        fileError.textContent = validation.error;
+                        fileError.style.display = 'block';
+                    }
+                    return;
+                }
+
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.style.opacity = '0.6';
+                    submitBtn.style.cursor = 'not-allowed';
+                }
+
+                if (progressWrapper) progressWrapper.style.display = 'block';
+                if (progressBar) progressBar.style.width = '20%';
+                if (progressPercent) progressPercent.textContent = '20%';
+                if (progressText) progressText.textContent = currentLang === 'ar' ? "جاري رفع السيرة الذاتية..." : "Téléchargement du CV en cours...";
+
+                const fullNameVal = document.getElementById('fullName').value;
+                
+                let fakeProgress = 20;
+                const progressInterval = setInterval(() => {
+                    if (fakeProgress < 85) {
+                        fakeProgress += 15;
+                        if (progressBar) progressBar.style.width = fakeProgress + '%';
+                        if (progressPercent) progressPercent.textContent = fakeProgress + '%';
+                    }
+                }, 150);
+
+                const uploadRes = await uploadCVToSupabase(selectedCVFile, fullNameVal);
+                clearInterval(progressInterval);
+
+                if (!uploadRes.success) {
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.style.opacity = '1';
+                        submitBtn.style.cursor = 'pointer';
+                    }
+                    if (progressWrapper) progressWrapper.style.display = 'none';
+                    if (fileError) {
+                        fileError.textContent = uploadRes.error;
+                        fileError.style.display = 'block';
+                    }
+                    alert(uploadRes.error);
+                    return;
+                }
+
+                if (progressBar) progressBar.style.width = '100%';
+                if (progressPercent) progressPercent.textContent = '100%';
+                if (progressText) progressText.textContent = currentLang === 'ar' ? "تم رفع السيرة الذاتية بنجاح! ✅" : "CV téléchargé avec succès! ✅";
+
+                cvData = {
+                    cvPath: uploadRes.cvPath,
+                    cvFileName: uploadRes.cvFileName,
+                    cvFileSize: uploadRes.cvFileSize,
+                    uploadDate: uploadRes.uploadDate
+                };
+            }
+            
+            const application = {
+                fullName: document.getElementById('fullName').value,
+                birthDate: document.getElementById('birthDate').value,
+                state: document.getElementById('state').value,
+                municipality: document.getElementById('municipality').value,
+                neighborhood: document.getElementById('neighborhood').value,
+                phone: document.getElementById('phone').value,
+                skills: document.getElementById('skills').value,
+                experience: document.getElementById('experience').value,
+                submissionDate: new Date().toISOString(),
+                status: 'pending',
+                ...(cvData ? cvData : {})
+            };
+            
+            db.collection("applications").add(application).then((docRef) => {
+                const notif = {
+                    titleAr: "طلب توظيف جديد! 📝",
+                    titleFr: "Nouvelle Candidature! 📝",
+                    messageAr: `المرشح: ${application.fullName} - الولاية: ${application.state}`,
+                    messageFr: `Candidat: ${application.fullName} - Wilaya: ${application.state}`,
+                    time: new Date().toLocaleTimeString(currentLang === 'ar' ? 'ar-MA' : 'fr-FR', {hour: '2-digit', minute:'2-digit', second:'2-digit'}),
+                    read: false,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                return db.collection("notifications").add(notif);
+            }).catch(err => {
+                console.error("Error adding application to Firestore: ", err);
+            });
+            
+            document.getElementById('successModal').style.display = 'flex';
+            document.getElementById('applicationForm').reset();
+
+            // Reset CV upload state
+            selectedCVFile = null;
+            const cvFileInput = document.getElementById('cvFile');
+            if (cvFileInput) cvFileInput.value = '';
+            const fileNameDisplay = document.getElementById('cvFileNameDisplay');
+            if (fileNameDisplay) fileNameDisplay.textContent = '';
+            if (fileError) fileError.style.display = 'none';
+            if (progressWrapper) progressWrapper.style.display = 'none';
+
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.style.opacity = '1';
+                submitBtn.style.cursor = 'pointer';
+            }
+        }
+
+        function closeSuccessModal() {
+            document.getElementById('successModal').style.display = 'none';
+        }
+
+        let adminSearchQuery = '';
+
+        function handleAdminSearch() {
+            const input = document.getElementById('adminSearchInput');
+            if (input) {
+                adminSearchQuery = input.value.toLowerCase().trim();
+                displayApplications();
+            }
+        }
+
+        function displayApplications() {
+            const applicationsList = document.getElementById('applicationsList');
+            const totalApps = document.getElementById('totalApplications');
+            const pendingApps = document.getElementById('pendingApplications');
+            const acceptedApps = document.getElementById('acceptedApplications');
+            const rejectedApps = document.getElementById('rejectedApplications');
+            
+            totalApps.textContent = applications.length;
+            pendingApps.textContent = applications.filter(app => app.status === 'pending').length;
+            acceptedApps.textContent = applications.filter(app => app.status === 'accepted').length;
+            rejectedApps.textContent = applications.filter(app => app.status === 'rejected').length;
+            
+            let filteredApps = applications;
+            if (currentFilter !== 'all') {
+                filteredApps = applications.filter(app => app.status === currentFilter);
+            }
+            
+            if (adminSearchQuery) {
+                filteredApps = filteredApps.filter(app => {
+                    const name = (app.fullName || '').toLowerCase();
+                    const state = (app.state || '').toLowerCase();
+                    const mun = (app.municipality || '').toLowerCase();
+                    const neigh = (app.neighborhood || '').toLowerCase();
+                    const phone = (app.phone || '').toLowerCase();
+                    const skills = (app.skills || '').toLowerCase();
+                    return name.includes(adminSearchQuery) || 
+                           state.includes(adminSearchQuery) || 
+                           mun.includes(adminSearchQuery) || 
+                           neigh.includes(adminSearchQuery) || 
+                           phone.includes(adminSearchQuery) ||
+                           skills.includes(adminSearchQuery);
+                });
+            }
+            
+            if (filteredApps.length === 0) {
+                applicationsList.innerHTML = `<div class="no-applications" data-i18n="noApps">${translations[currentLang].noApps}</div>`;
+                return;
+            }
+            
+            applicationsList.innerHTML = filteredApps.slice().reverse().map(app => `
+                <div class="application-card">
+                    <div class="app-header">
+                        <div class="app-name" dir="auto">${app.fullName}</div>
+                        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                            <span class="status-badge status-${app.status}">
+                                ${translations[currentLang]['status' + app.status.charAt(0).toUpperCase() + app.status.slice(1) + 'Label']}
+                            </span>
+                            <div class="app-date">${new Date(app.submissionDate).toLocaleDateString(currentLang === 'ar' ? 'ar-MA' : 'fr-FR')}</div>
+                        </div>
+                    </div>
+                    <div class="app-details">
+                        <div class="detail-item">
+                            <span class="detail-label">${translations[currentLang].detBirth}</span>
+                            <span class="detail-value" dir="auto">${app.birthDate}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">${translations[currentLang].detNeigh}</span>
+                            <span class="detail-value" dir="auto">${app.neighborhood}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">${translations[currentLang].detState}</span>
+                            <span class="detail-value" dir="auto">${app.state || '-'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">${translations[currentLang].detMun}</span>
+                            <span class="detail-value" dir="auto">${app.municipality || '-'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">${translations[currentLang].detPhone}</span>
+                            <span class="detail-value" dir="ltr" style="display:inline-block; text-align:start;">${app.phone}</span>
+                        </div>
+                        ${app.skills ? `
+                        <div class="detail-item" style="grid-column: 1 / -1;">
+                            <span class="detail-label">${translations[currentLang].detSkills}</span>
+                            <div class="detail-value" dir="auto" style="word-break:break-word;">${app.skills}</div>
+                        </div>` : ''}
+                        ${app.experience ? `
+                        <div class="detail-item" style="grid-column: 1 / -1;">
+                            <span class="detail-label">${translations[currentLang].detExp}</span>
+                            <div class="detail-value" dir="auto" style="word-break:break-word;">${app.experience}</div>
+                        </div>` : ''}
+                        ${app.cvPath ? `
+                        <div class="detail-item" style="grid-column: 1 / -1; background: #f0f9ff; border-color: #bae6fd; padding: 12px 14px;">
+                            <span class="detail-label" style="color: #0369a1; font-weight: 800;">${translations[currentLang].detCV}</span>
+                            <div class="detail-value" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-top: 4px;">
+                                <span style="font-weight: 700; color: #0c4a6e; font-size: 13px;">📄 ${app.cvFileName || 'CV_Candidate.pdf'} ${(app.cvFileSize ? '(' + (app.cvFileSize / (1024*1024)).toFixed(2) + ' MB)' : '')}</span>
+                                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                    <button type="button" class="action-btn btn-view-cv" onclick="viewCVInNewTab('${app.cvPath}')">
+                                        👁️ ${translations[currentLang].btnViewCV}
+                                    </button>
+                                    <button type="button" class="action-btn btn-download-cv" onclick="downloadCVPdf('${app.cvPath}', '${app.cvFileName || 'CV.pdf'}')">
+                                        📥 ${translations[currentLang].btnDownloadCV}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>` : ''}
+                    </div>
+                    <div class="card-actions">
+                        <button class="action-btn btn-accept" onclick="updateStatus('${app.docId}', 'accepted')" style="${app.status === 'accepted' ? 'display:none;' : ''}">
+                            ${translations[currentLang].btnAcceptLabel}
+                        </button>
+                        <button class="action-btn btn-reject" onclick="updateStatus('${app.docId}', 'rejected')" style="${app.status === 'rejected' ? 'display:none;' : ''}">
+                            ${translations[currentLang].btnRejectLabel}
+                        </button>
+                        <button class="action-btn btn-delete" onclick="deleteApplication('${app.docId}')">
+                            ${translations[currentLang].btnDeleteLabel}
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('adminModal');
+            if (event.target === modal) {
+                closeAdminModal();
+            }
+            
+            const promptModal = document.getElementById('notifPromptModal');
+            if (event.target === promptModal) {
+                closeNotifPromptModal();
+            }
+
+            const confirmModal = document.getElementById('confirmModal');
+            if (event.target === confirmModal) {
+                closeConfirmModal();
+            }
+            
+            const dropdown = document.getElementById('notificationsDropdown');
+            const bell = document.getElementById('notificationBellBtn');
+            if (dropdown && dropdown.style.display === 'block' && !dropdown.contains(event.target) && !bell.contains(event.target)) {
+                dropdown.style.display = 'none';
+            }
+        }
+
+        if (window.history.replaceState) {
+            window.history.replaceState(null, null, window.location.href);
+        }
+
+        if ('serviceWorker' in navigator && (window.location.protocol === 'http:' || window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then((reg) => console.log('Service Worker registered successfully with scope: ', reg.scope))
+                    .catch((err) => console.warn('Service Worker info: ', err));
+            });
+        }
+
+        let deferredPrompt = null;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            const installBtn = document.getElementById('pwaInstallBtn');
+            if (installBtn) {
+                installBtn.style.display = 'flex';
+            }
+        });
+
+        function triggerPwaInstall() {
+            if (!deferredPrompt) return;
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult.outcome === 'accepted') {
+                    console.log('User accepted the PWA install prompt');
+                    const installBtn = document.getElementById('pwaInstallBtn');
+                    if (installBtn) installBtn.style.display = 'none';
+                }
+                deferredPrompt = null;
+            });
+        }
+
+        window.addEventListener('appinstalled', (evt) => {
+            console.log('PWA was installed successfully');
+            const installBtn = document.getElementById('pwaInstallBtn');
+            if (installBtn) installBtn.style.display = 'none';
+        });
+    </script>
+</body>
+</html>
